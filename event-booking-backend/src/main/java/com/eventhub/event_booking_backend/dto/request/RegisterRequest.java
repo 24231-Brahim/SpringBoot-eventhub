@@ -6,14 +6,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * DTO de requête pour l'inscription d'un nouvel utilisateur.
+ * Contient les informations nécessaires à la création du compte.
+ */
 @Data
 public class RegisterRequest {
-    @Email @NotBlank
+    @Email(message = "Email invalide")
+    @NotBlank(message = "L'email est obligatoire")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Le mot de passe est obligatoire")
     private String password;
 
-    @NotNull
+    @NotNull(message = "Le rôle est obligatoire")
     private Role role;
 }

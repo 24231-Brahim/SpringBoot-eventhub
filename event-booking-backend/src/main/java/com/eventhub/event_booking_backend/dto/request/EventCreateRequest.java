@@ -3,30 +3,35 @@ package com.eventhub.event_booking_backend.dto.request;
 import com.eventhub.event_booking_backend.model.Category;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * DTO de requête pour la création d'un événement.
+ * Contient toutes les informations nécessaires à la création d'un nouvel événement.
+ */
 @Data
 public class EventCreateRequest {
-    @NotBlank
+    @NotBlank(message = "Le titre est obligatoire")
     private String title;
 
-    @NotBlank
+    @NotBlank(message = "La description est obligatoire")
     private String description;
 
-    @NotNull
+    @NotNull(message = "La catégorie est obligatoire")
     private Category category;
 
-    @NotNull
+    @NotNull(message = "La date de début est obligatoire")
     private LocalDateTime startDate;
 
-    @NotNull
+    @NotNull(message = "La date de fin est obligatoire")
     private LocalDateTime endDate;
 
-    @NotNull @Min(1)
+    @NotNull(message = "La capacité est obligatoire")
+    @Min(value = 1, message = "La capacité doit être au moins 1")
     private Integer capacity;
 
-    @NotNull @DecimalMin("0.0")
+    @NotNull(message = "Le prix est obligatoire")
+    @DecimalMin(value = "0.0", message = "Le prix ne peut pas être négatif")
     private BigDecimal price;
 }

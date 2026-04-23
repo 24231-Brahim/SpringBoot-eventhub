@@ -2,10 +2,13 @@ package com.eventhub.event_booking_backend.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * DTO de réponse pour les informations d'une réservation.
+ * Contient les détails de la réservation et de l'événement associé.
+ */
 @Data
 @Builder
 public class BookingResponse {
