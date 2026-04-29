@@ -1,0 +1,18 @@
+package com.eventhub.event_booking_backend.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+
+/**
+ * DTO de réponse pour l'authentification.
+ * Contient le token JWT et les informations de l'utilisateur connecté.
+ */
+@Data
+@AllArgsConstructor
+@Builder
+public class AuthResponse {
+    private String token;
+    private String email;
+    private String role;
+}
