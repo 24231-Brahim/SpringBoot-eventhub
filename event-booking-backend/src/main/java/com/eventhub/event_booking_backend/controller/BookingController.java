@@ -30,7 +30,7 @@ public class BookingController {
      */
     @PostMapping("/bookings")
     public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingCreateRequest request,
-                                                         Authentication authentication) {
+                                                        Authentication authentication) {
         return ResponseEntity.ok(bookingService.createBooking(request, authentication.getName()));
     }
 

@@ -21,12 +21,12 @@ public class OrganizerController {
     private final EventService eventService;
 
     /**
-     * Crée un nouvel événement.
-     * L'organisateur est automatiquement récupéré depuis le token JWT.
-     * @param request Les données de l'événement.
-     * @param authentication L'authentification contenant l'email de l'organisateur.
-     * @return Les détails de l'événement créé.
-     */
+        * Crée un nouvel événement.
+        * L'organisateur est automatiquement récupéré depuis le token JWT.
+        * @param request Les données de l'événement.
+        * @param authentication L'authentification contenant l'email de l'organisateur.
+        * @return Les détails de l'événement créé.
+    */
     @PostMapping("/events")
     public ResponseEntity<EventSummaryResponse> createEvent(@Valid @RequestBody EventCreateRequest request,
                                                             Authentication authentication) {

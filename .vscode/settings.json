@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
         "eventhub"
-    ]
+    ],
+    "java.compile.nullAnalysis.mode": "automatic"
 }
