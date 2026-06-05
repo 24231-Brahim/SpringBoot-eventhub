@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -30,6 +30,7 @@ class OrganizerControllerIntegrationTest {
 
     private String organizerToken;
     private String organizerEmail;
+    private Long eventId;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -46,6 +47,34 @@ class OrganizerControllerIntegrationTest {
                 .andExpect(status().isOk());
 
         organizerToken = testConfig.generateOrganizerToken(organizerEmail);
+
+        eventId = createEvent();
+    }
+
+    private Long createEvent() throws Exception {
+        String eventJson = """
+                {
+                    "title": "Update Test Event",
+                    "description": "Test Description",
+                    "category": "TECH",
+                    "startDate": "2026-06-01T10:00:00",
+                    "endDate": "2026-06-01T18:00:00",
+                    "capacity": 200,
+                    "price": 75.00
+                }
+                """;
+
+        String response = mockMvc.perform(post("/api/v1/organizer/events")
+                        .header("Authorization", "Bearer " + organizerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(eventJson))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(response);
+        return jsonNode.get("id").asLong();
     }
 
     @Test
@@ -114,6 +143,65 @@ class OrganizerControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(eventJson))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldUpdateEvent() throws Exception {
+        String updateJson = """
+                {
+                    "title": "Updated Event",
+                    "description": "Updated Description",
+                    "category": "MUSIC",
+                    "startDate": "2026-07-01T10:00:00",
+                    "endDate": "2026-07-01T20:00:00",
+                    "capacity": 300,
+                    "price": 100.00
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/organizer/events/" + eventId)
+                        .header("Authorization", "Bearer " + organizerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated Event"))
+                .andExpect(jsonPath("$.category").value("MUSIC"))
+                .andExpect(jsonPath("$.capacity").value(300));
+    }
+
+    @Test
+    void shouldNotUpdateEventWithoutAuth() throws Exception {
+        String updateJson = """
+                {
+                    "title": "Updated Event",
+                    "description": "Updated Description",
+                    "category": "MUSIC",
+                    "startDate": "2026-07-01T10:00:00",
+                    "endDate": "2026-07-01T20:00:00",
+                    "capacity": 300,
+                    "price": 100.00
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/organizer/events/" + eventId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldDeleteEvent() throws Exception {
+        Long tempEventId = createEvent();
+
+        mockMvc.perform(delete("/api/v1/organizer/events/" + tempEventId)
+                        .header("Authorization", "Bearer " + organizerToken))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldNotDeleteEventWithoutAuth() throws Exception {
+        mockMvc.perform(delete("/api/v1/organizer/events/" + eventId))
+                .andExpect(status().isForbidden());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.eventhub.event_booking_backend.controller;
 
 import com.eventhub.event_booking_backend.dto.request.EventCreateRequest;
+import com.eventhub.event_booking_backend.dto.request.EventUpdateRequest;
 import com.eventhub.event_booking_backend.dto.response.EventSummaryResponse;
 import com.eventhub.event_booking_backend.service.EventService;
 import jakarta.validation.Valid;
@@ -31,5 +32,18 @@ public class OrganizerController {
     public ResponseEntity<EventSummaryResponse> createEvent(@Valid @RequestBody EventCreateRequest request,
                                                             Authentication authentication) {
         return ResponseEntity.ok(eventService.createEvent(request, authentication.getName()));
+    }
+
+    @PutMapping("/events/{id}")
+    public ResponseEntity<EventSummaryResponse> updateEvent(@PathVariable Long id,
+                                                             @Valid @RequestBody EventUpdateRequest request,
+                                                             Authentication authentication) {
+        return ResponseEntity.ok(eventService.updateEvent(id, request, authentication.getName()));
+    }
+
+    @DeleteMapping("/events/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id, Authentication authentication) {
+        eventService.deleteEvent(id, authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }

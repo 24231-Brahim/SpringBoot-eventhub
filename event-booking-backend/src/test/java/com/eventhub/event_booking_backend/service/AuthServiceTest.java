@@ -87,6 +87,48 @@ class AuthServiceTest {
     }
 
     /**
+     * Teste l'inscription d'un utilisateur avec le rôle ORGANIZER.
+     */
+    @Test
+    void register_Organizer_Success() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("organizer@example.com");
+        request.setPassword("password123");
+        request.setRole(Role.ROLE_ORGANIZER);
+
+        User orgUser = User.builder()
+                .id(2L)
+                .email("organizer@example.com")
+                .password("encodedPassword")
+                .role(Role.ROLE_ORGANIZER)
+                .build();
+
+        when(userRepository.existsByEmail("organizer@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(orgUser);
+        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("jwtToken");
+
+        AuthResponse response = authService.register(request);
+
+        assertNotNull(response);
+        assertEquals("ROLE_ORGANIZER", response.getRole());
+    }
+
+    /**
+     * Teste que l'inscription avec le rôle ADMIN est refusée.
+     */
+    @Test
+    void register_AdminRole_ThrowsException() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("admin@example.com");
+        request.setPassword("password123");
+        request.setRole(Role.ROLE_ADMIN);
+
+        assertThrows(BusinessException.class, () -> authService.register(request));
+        verify(userRepository, never()).save(any());
+    }
+
+    /**
      * Teste l'inscription quand l'email existe déjà.
      * Doit lever une exception BusinessException.
      */

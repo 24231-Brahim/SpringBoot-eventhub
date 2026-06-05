@@ -11,20 +11,26 @@
 	<groupId>com.eventhub</groupId>
 	<artifactId>event-booking-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<name>Event Booking Backend</name>
+	<description>Backend API for event booking and reservation management system</description>
+	<url>https://github.com/eventhub/event-booking-backend</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>EventHub Team</name>
+			<email>team@eventhub.com</email>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:git://github.com/eventhub/event-booking-backend.git</connection>
+		<developerConnection>scm:git:ssh://github.com/eventhub/event-booking-backend.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/eventhub/event-booking-backend</url>
 	</scm>
 	<properties>
 		<java.version>21</java.version>

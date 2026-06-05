@@ -3,6 +3,7 @@ package com.eventhub.event_booking_backend.controller;
 import com.eventhub.event_booking_backend.dto.request.BookingCreateRequest;
 import com.eventhub.event_booking_backend.dto.response.BookingResponse;
 import com.eventhub.event_booking_backend.service.BookingService;
+import com.eventhub.event_booking_backend.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final PaymentService paymentService;
 
     /**
      * Crée une nouvelle réservation.
@@ -42,5 +44,17 @@ public class BookingController {
     @GetMapping("/my-bookings")
     public ResponseEntity<List<BookingResponse>> getMyBookings(Authentication authentication) {
         return ResponseEntity.ok(bookingService.getMyBookings(authentication.getName()));
+    }
+
+    @PostMapping("/bookings/{bookingId}/cancel")
+    public ResponseEntity<Void> cancelBooking(@PathVariable Long bookingId, Authentication authentication) {
+        bookingService.cancelBooking(bookingId, authentication.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/bookings/{bookingId}/pay")
+    public ResponseEntity<Void> payBooking(@PathVariable Long bookingId, Authentication authentication) {
+        paymentService.processPayment(bookingId);
+        return ResponseEntity.ok().build();
     }
 }
