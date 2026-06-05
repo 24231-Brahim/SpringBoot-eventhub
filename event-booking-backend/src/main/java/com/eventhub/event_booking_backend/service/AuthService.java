@@ -39,6 +39,10 @@ public class AuthService {
             throw new BusinessException("Email already exists");
         }
 
+        if (request.getRole() == com.eventhub.event_booking_backend.model.Role.ROLE_ADMIN) {
+            throw new BusinessException("Admin registration is not allowed");
+        }
+
         var savedUser = userRepository.save(
                 com.eventhub.event_booking_backend.model.User.builder()
                         .email(request.getEmail())

@@ -1,6 +1,7 @@
 package com.eventhub.event_booking_backend.service;
 
 import com.eventhub.event_booking_backend.dto.request.EventCreateRequest;
+import com.eventhub.event_booking_backend.dto.request.EventUpdateRequest;
 import com.eventhub.event_booking_backend.dto.response.EventSummaryResponse;
 import com.eventhub.event_booking_backend.exception.BusinessException;
 import com.eventhub.event_booking_backend.model.Category;
@@ -190,5 +191,125 @@ class EventServiceTest {
         when(eventRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(BusinessException.class, () -> eventService.getById(1L));
+    }
+
+    @Test
+    void updateEvent_Success() {
+        EventUpdateRequest request = new EventUpdateRequest();
+        request.setTitle("Updated Event");
+        request.setDescription("Updated Description");
+        request.setCategory(Category.TECH);
+        request.setStartDate(LocalDateTime.now().plusDays(3));
+        request.setEndDate(LocalDateTime.now().plusDays(5));
+        request.setCapacity(200);
+        request.setPrice(BigDecimal.valueOf(150));
+
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.of(testOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EventSummaryResponse response = eventService.updateEvent(1L, request, "organizer@example.com");
+
+        assertNotNull(response);
+        assertEquals("Updated Event", response.getTitle());
+        assertEquals(Category.TECH, response.getCategory());
+        assertEquals(200, response.getCapacity());
+        assertEquals(BigDecimal.valueOf(150), response.getPrice());
+    }
+
+    @Test
+    void updateEvent_OrganizerNotFound_ThrowsException() {
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class,
+                () -> eventService.updateEvent(1L, new EventUpdateRequest(), "organizer@example.com"));
+    }
+
+    @Test
+    void updateEvent_EventNotFound_ThrowsException() {
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.of(testOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class,
+                () -> eventService.updateEvent(1L, new EventUpdateRequest(), "organizer@example.com"));
+    }
+
+    @Test
+    void updateEvent_NotOwner_ThrowsException() {
+        User otherOrganizer = User.builder().id(99L).email("other@example.com").build();
+
+        when(userRepository.findByEmail("other@example.com")).thenReturn(Optional.of(otherOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
+
+        assertThrows(BusinessException.class,
+                () -> eventService.updateEvent(1L, new EventUpdateRequest(), "other@example.com"));
+    }
+
+    @Test
+    void updateEvent_EndDateBeforeStartDate_ThrowsException() {
+        EventUpdateRequest request = new EventUpdateRequest();
+        request.setEndDate(LocalDateTime.now().plusDays(1));
+        request.setStartDate(LocalDateTime.now().plusDays(3));
+
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.of(testOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
+
+        assertThrows(BusinessException.class,
+                () -> eventService.updateEvent(1L, request, "organizer@example.com"));
+    }
+
+    @Test
+    void updateEvent_CannotReduceBelowBooked_ThrowsException() {
+        testEvent.setCapacity(100);
+        testEvent.setAvailableSeats(5);
+        EventUpdateRequest request = new EventUpdateRequest();
+        request.setTitle("Event");
+        request.setDescription("Desc");
+        request.setCategory(Category.MUSIC);
+        request.setStartDate(LocalDateTime.now().plusDays(1));
+        request.setEndDate(LocalDateTime.now().plusDays(2));
+        request.setCapacity(3);
+        request.setPrice(BigDecimal.TEN);
+
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.of(testOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
+
+        assertThrows(BusinessException.class,
+                () -> eventService.updateEvent(1L, request, "organizer@example.com"));
+    }
+
+    @Test
+    void deleteEvent_Success() {
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.of(testOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
+
+        eventService.deleteEvent(1L, "organizer@example.com");
+
+        verify(eventRepository).delete(testEvent);
+    }
+
+    @Test
+    void deleteEvent_OrganizerNotFound_ThrowsException() {
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class, () -> eventService.deleteEvent(1L, "organizer@example.com"));
+    }
+
+    @Test
+    void deleteEvent_EventNotFound_ThrowsException() {
+        when(userRepository.findByEmail("organizer@example.com")).thenReturn(Optional.of(testOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class, () -> eventService.deleteEvent(1L, "organizer@example.com"));
+    }
+
+    @Test
+    void deleteEvent_NotOwner_ThrowsException() {
+        User otherOrganizer = User.builder().id(99L).email("other@example.com").build();
+
+        when(userRepository.findByEmail("other@example.com")).thenReturn(Optional.of(otherOrganizer));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
+
+        assertThrows(BusinessException.class, () -> eventService.deleteEvent(1L, "other@example.com"));
     }
 }

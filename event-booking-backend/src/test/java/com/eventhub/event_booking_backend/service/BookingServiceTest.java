@@ -188,4 +188,76 @@ class BookingServiceTest {
 
         assertThrows(BusinessException.class, () -> bookingService.getMyBookings("test@example.com"));
     }
+
+    @Test
+    void cancelBooking_Success() {
+        testEvent.setOrganizer(testUser);
+        Booking booking = Booking.builder()
+                .id(1L)
+                .event(testEvent)
+                .user(testUser)
+                .totalPrice(BigDecimal.valueOf(100))
+                .paymentStatus(PaymentStatus.PAID)
+                .build();
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        bookingService.cancelBooking(1L, "test@example.com");
+
+        assertEquals(PaymentStatus.CANCELLED, booking.getPaymentStatus());
+        assertEquals(51, testEvent.getAvailableSeats());
+        verify(eventRepository).save(testEvent);
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void cancelBooking_UserNotFound_ThrowsException() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class, () -> bookingService.cancelBooking(1L, "test@example.com"));
+    }
+
+    @Test
+    void cancelBooking_BookingNotFound_ThrowsException() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class, () -> bookingService.cancelBooking(1L, "test@example.com"));
+    }
+
+    @Test
+    void cancelBooking_NotOwner_ThrowsException() {
+        User otherUser = User.builder().id(99L).email("other@example.com").build();
+        testEvent.setOrganizer(testUser);
+        Booking booking = Booking.builder()
+                .id(1L)
+                .event(testEvent)
+                .user(otherUser)
+                .totalPrice(BigDecimal.valueOf(100))
+                .paymentStatus(PaymentStatus.PAID)
+                .build();
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThrows(BusinessException.class, () -> bookingService.cancelBooking(1L, "test@example.com"));
+    }
+
+    @Test
+    void cancelBooking_AlreadyCancelled_ThrowsException() {
+        testEvent.setOrganizer(testUser);
+        Booking booking = Booking.builder()
+                .id(1L)
+                .event(testEvent)
+                .user(testUser)
+                .totalPrice(BigDecimal.valueOf(100))
+                .paymentStatus(PaymentStatus.CANCELLED)
+                .build();
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThrows(BusinessException.class, () -> bookingService.cancelBooking(1L, "test@example.com"));
+    }
 }

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Service de gestion des réservations.
@@ -53,6 +54,7 @@ public class BookingService {
         }
 
         event.setAvailableSeats(event.getAvailableSeats() - 1);
+        eventRepository.save(event);
 
         Booking booking = Booking.builder()
                 .event(event)
@@ -86,6 +88,31 @@ public class BookingService {
      * @param booking L'entité à convertir.
      * @return Le DTO de réponse.
      */
+    @Transactional
+    public void cancelBooking(Long bookingId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("User not found"));
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BusinessException("Booking not found"));
+
+        if (!Objects.equals(booking.getUser().getId(), user.getId())) {
+            throw new BusinessException("You are not the owner of this booking");
+        }
+
+        if (booking.getPaymentStatus() == PaymentStatus.CANCELLED) {
+            throw new BusinessException("Booking is already cancelled");
+        }
+
+        booking.setPaymentStatus(PaymentStatus.CANCELLED);
+
+        Event event = booking.getEvent();
+        event.setAvailableSeats(event.getAvailableSeats() + 1);
+        eventRepository.save(event);
+
+        bookingRepository.save(booking);
+    }
+
     private BookingResponse mapToResponse(Booking booking) {
         return BookingResponse.builder()
                 .bookingId(booking.getId())

@@ -137,6 +137,50 @@ class BookingControllerIntegrationTest {
     }
 
     @Test
+    void shouldCancelBooking() throws Exception {
+        BookingCreateRequest request = new BookingCreateRequest();
+        request.setEventId(eventId);
+
+        String bookingResponse = mockMvc.perform(post("/api/v1/user/bookings")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(bookingResponse);
+        Long bookingId = jsonNode.get("bookingId").asLong();
+
+        mockMvc.perform(post("/api/v1/user/bookings/" + bookingId + "/cancel")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldPayBooking() throws Exception {
+        BookingCreateRequest request = new BookingCreateRequest();
+        request.setEventId(eventId);
+
+        String bookingResponse = mockMvc.perform(post("/api/v1/user/bookings")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        com.fasterxml.jackson.databind.JsonNode jsonNode = objectMapper.readTree(bookingResponse);
+        Long bookingId = jsonNode.get("bookingId").asLong();
+
+        mockMvc.perform(post("/api/v1/user/bookings/" + bookingId + "/pay")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void shouldNotGetBookingsWithoutAuth() throws Exception {
         // Test de récupération des réservations sans authentification
         mockMvc.perform(get("/api/v1/user/my-bookings"))

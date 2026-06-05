@@ -1,6 +1,7 @@
 package com.eventhub.event_booking_backend.service;
 
 import com.eventhub.event_booking_backend.dto.request.EventCreateRequest;
+import com.eventhub.event_booking_backend.dto.request.EventUpdateRequest;
 import com.eventhub.event_booking_backend.dto.response.EventSummaryResponse;
 import com.eventhub.event_booking_backend.exception.BusinessException;
 import com.eventhub.event_booking_backend.model.Category;
@@ -11,6 +12,7 @@ import com.eventhub.event_booking_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Service de gestion des événements.
@@ -73,6 +75,53 @@ public class EventService {
     public EventSummaryResponse getById(Long id) {
         return mapToResponse(eventRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Event not found")));
+    }
+
+    public EventSummaryResponse updateEvent(Long id, EventUpdateRequest request, String organizerEmail) {
+        User organizer = userRepository.findByEmail(organizerEmail)
+                .orElseThrow(() -> new BusinessException("Organizer not found"));
+
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Event not found"));
+
+        if (!Objects.equals(event.getOrganizer().getId(), organizer.getId())) {
+            throw new BusinessException("You are not the owner of this event");
+        }
+
+        if (request.getEndDate().isBefore(request.getStartDate())) {
+            throw new BusinessException("End date must be after start date");
+        }
+
+        int seatDiff = request.getCapacity() - event.getCapacity();
+        int newAvailableSeats = event.getAvailableSeats() + seatDiff;
+        if (newAvailableSeats < 0) {
+            throw new BusinessException("Cannot reduce capacity below current bookings");
+        }
+
+        event.setTitle(request.getTitle());
+        event.setDescription(request.getDescription());
+        event.setCategory(request.getCategory());
+        event.setStartDate(request.getStartDate());
+        event.setEndDate(request.getEndDate());
+        event.setCapacity(request.getCapacity());
+        event.setAvailableSeats(newAvailableSeats);
+        event.setPrice(request.getPrice());
+
+        return mapToResponse(eventRepository.save(event));
+    }
+
+    public void deleteEvent(Long id, String organizerEmail) {
+        User organizer = userRepository.findByEmail(organizerEmail)
+                .orElseThrow(() -> new BusinessException("Organizer not found"));
+
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Event not found"));
+
+        if (!Objects.equals(event.getOrganizer().getId(), organizer.getId())) {
+            throw new BusinessException("You are not the owner of this event");
+        }
+
+        eventRepository.delete(event);
     }
 
     /**
